@@ -8,5 +8,6 @@ Main Features
 
 Usage:
 ------
-    acl2csv.py hourly.cfg access_log > hourly.csv
-    acl2png.py hourly.cfg access_log
+    acl2csv.py sample.cfg access_log > sample.csv
+    acl2png.py sample.cfg sample.csv
+    ls -ltr *.png
