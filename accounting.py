@@ -1,6 +1,9 @@
 import csv
 import sys
 import logfile
+from os.path import exists
+import datetime
+from dateutil import parser
 
 IT_REQUESTS = 0
 IT_TIME = 1
@@ -9,9 +12,40 @@ IT_TIME_MAX = 3
 IT_SIZE_MAX = 4
 
 
-def summarize_log_data(log_file, config):
+def summarize_log_data(log_file, config, options):
     # Returns a list of elements with the following structure:
     #   ( hour,  [vhost_name, [requests, time, size, time_max, size_max]] )
+    last_time = current_time = datetime.datetime.now()
+    state = config.get('state')
+    if state:
+        log_file.seek(0, 2)
+        file_size = log_file.tell()
+        last_position_fname = state[1]
+        if not exists(last_position_fname):
+            with open(last_position_fname, 'wt') as last_run_file:
+                current_time = datetime.datetime.now()
+                last_run_file.write("%s %s\n" % (str(file_size), current_time.isoformat()))
+            if not options.quiet:
+                print "Created initial file position"
+            sys.exit(0)
+        else:
+            with open(last_position_fname, 'rt') as last_run_file:
+                last_postion, last_time = last_run_file.readline().split()
+                last_postion = int(last_postion)
+                last_time = parser.parse(last_time)
+                if file_size == last_postion:
+                    if not options.quiet:
+                        print "File size did not change, nothing to parse."
+                    sys.exit(0)
+                if file_size < last_postion:  # File was truncated, restart from beginning
+                    if not options.quiet:
+                        print "File was truncated, restarting from beginning of file"
+                    log_file.seek(0)
+                else:
+                    log_file.seek(last_postion)  # Go to last position
+    elapsed_seconds = (current_time-last_time).total_seconds()
+    print "time since last run", elapsed_seconds
+    parsed_lines = 0
     aggregated_data = {}
 
     # Setup format logging
@@ -20,7 +54,6 @@ def summarize_log_data(log_file, config):
 
     # Setup replacements
     replacements = config.regex_map('replacements')
-    excludes = config.regex_map('excludes')
 
     line = log_file.readline()
     while line:
@@ -31,7 +64,7 @@ def summarize_log_data(log_file, config):
         if not line_dict:
             line = log_file.readline()
             continue
-
+        parsed_lines += 1
         aggregation_key = tuple([line_dict[group_name] for group_name in config.get('group_by')])
         aggregated_row = aggregated_data.get(aggregation_key)
         # Create new key if needed
@@ -50,6 +83,15 @@ def summarize_log_data(log_file, config):
     # Sort data by aggregation key
     aggregated_data = sorted(aggregated_data.iteritems())
 
+    if state:
+        last_position_fname = state[1]
+        file_size = log_file.tell()
+        with open(last_position_fname, 'wt') as last_run_file:
+            current_time = datetime.datetime.now()
+            last_run_file.write("%s %s\n" % (str(file_size), current_time.isoformat()))
+
+    if not options.quiet:
+        print "Processed", parsed_lines
     return aggregated_data
 
 
@@ -59,6 +101,7 @@ def print_results(aggregated_data, options):
 
     aggregation_keys = aggregated_data[0][0]
     keys = ['key_' + str(i) for i in range(len(aggregation_keys))]
-    csvwriter.writerow(keys + ['requests', 'taken (ms)', 'size', 'taken_max', 'size_max'])
+    if not options.quiet:
+        csvwriter.writerow(keys + ['requests', 'taken (ms)', 'size', 'taken_max', 'size_max'])
     for aggregation_keys, aggregated_row in aggregated_data:
         csvwriter.writerow(list(aggregation_keys) + aggregated_row)

@@ -4,17 +4,18 @@
 
 from optparse import OptionParser
 import accounting
-import sys
 from config import Config
 
 
 def parse_args():
     cmd_parser = OptionParser()
 
+    cmd_parser.add_option("-q", "--quiet", dest="quiet",
+        help="No information ouput", action="store_true", default=False)
+    cmd_parser.add_option("-r", "--results", dest="quiet",
+        help="Calculate perofrmance results", action="store_true", default=False)
     (options, args) = cmd_parser.parse_args()
-    if len(args) < 2:
-        cmd_parser.print_help()
-        sys.exit(1)
+
     return options, args
 
 
@@ -22,10 +23,14 @@ def main():
     (options, args) = parse_args()
     cfg_filename = args[0]
     config = Config(cfg_filename)
-    access_log_filename = args[1]
+    state = config.get('state')
+    if len(args) > 1:
+        access_log_filename = args[1]
+    else:
+        access_log_filename = state[0]
     log_file = open(access_log_filename)
-    aggregated_data = accounting.summarize_log_data(log_file, config)
-    accounting.print_results(aggregated_data, config)
+    aggregated_data = accounting.summarize_log_data(log_file, config, options)
+    accounting.print_results(aggregated_data, options)
 
 if __name__ == '__main__':
     try:

@@ -3,7 +3,6 @@ from optparse import OptionParser
 from config import Config
 import chart
 import sys
-from pprint import pprint
 
 def parse_args():
     cmd_parser = OptionParser()
@@ -22,9 +21,8 @@ def main():
     csv_filename = args[1]
     chart_sections = [section for section in config.config_dict.iterkeys() if section.endswith('_chart')]
     for chart_name in chart_sections:
-        data = chart.build_chart_data(csv_filename, config)
-        title, value_field, value_label, output_fname = config.get(chart_name)
-        chart.create_chart(data, value_field, title, value_label, output_fname)
+        data  = chart.build_chart_data(csv_filename, config)
+        chart.create_chart(data, chart_name, config)
 
 
 if __name__ == '__main__':
