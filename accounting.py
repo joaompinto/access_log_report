@@ -5,6 +5,12 @@ from os.path import exists
 import datetime
 from dateutil import parser
 
+#print  os.path.dirname(os.path.realpath(__file__))
+#sys.path.append((os.path.dirname(os.path.realpath(__file__)+'/apache-log-parser')))
+
+import apache_log_parser
+from pprint import pprint
+
 IT_REQUESTS = 0
 IT_TIME = 1
 IT_SIZE = 2
@@ -20,7 +26,7 @@ def summarize_log_data(log_file, config, options):
     if state:
         log_file.seek(0, 2)
         file_size = log_file.tell()
-        last_position_fname = state[1]
+        last_position_fname = state[0]
         if not exists(last_position_fname):
             with open(last_position_fname, 'wt') as last_run_file:
                 current_time = datetime.datetime.now()
@@ -43,14 +49,14 @@ def summarize_log_data(log_file, config, options):
                     log_file.seek(0)
                 else:
                     log_file.seek(last_postion)  # Go to last position
-    elapsed_seconds = (current_time-last_time).total_seconds()
-    print "time since last run", elapsed_seconds
+    elapsed_seconds = (current_time - last_time).total_seconds()
+
     parsed_lines = 0
     aggregated_data = {}
 
     # Setup format logging
     format_str = config.get('format', mandatory=True)[0]
-    logfile.set_log_fmt(format_str)
+    line_parser = apache_log_parser.make_parser(format_str)
 
     # Setup replacements
     replacements = config.regex_map('replacements')
@@ -58,8 +64,13 @@ def summarize_log_data(log_file, config, options):
     line = log_file.readline()
     while line:
         line = line.strip('\n')
-        line_dict = logfile.logline2dict(line)
-        line_dict = logfile.fields(line_dict)
+        log_line_data = line_parser(line)
+        print log_line_data
+        line_dict = log_line_data
+        #line_dict = logfile.logline2dict(line)
+        #print line_dict
+        print logfile.fields(line_dict)
+        line_dict = logfile.fields(line_dict)           # Handle special fields
         line_dict = replacements.apply_to(line_dict)
         if not line_dict:
             line = log_file.readline()
@@ -73,18 +84,25 @@ def summarize_log_data(log_file, config, options):
 
         aggregated_row[IT_REQUESTS] += 1
         time_taken = line_dict['msec']
-        response_size = line_dict['size']
+        response_size = int(line_dict['response_bytes_clf'])
         aggregated_row[IT_TIME] += time_taken
         aggregated_row[IT_SIZE] += response_size
         aggregated_row[IT_TIME_MAX] = max(time_taken, aggregated_row[IT_TIME_MAX])
         aggregated_row[IT_SIZE_MAX] = max(response_size, aggregated_row[IT_SIZE_MAX])
         line = log_file.readline()
 
+    # Calculae results
+    if options.results:
+        resuls_aggregated_data = {}
+        for key, row in aggregated_data.iteritems():
+            row[IT_TIME] = row[IT_TIME] / row[IT_REQUESTS]
+            row[IT_REQUESTS] = row[IT_REQUESTS] / elapsed_seconds
+
     # Sort data by aggregation key
     aggregated_data = sorted(aggregated_data.iteritems())
 
     if state:
-        last_position_fname = state[1]
+        last_position_fname = state[0]
         file_size = log_file.tell()
         with open(last_position_fname, 'wt') as last_run_file:
             current_time = datetime.datetime.now()
@@ -101,7 +119,11 @@ def print_results(aggregated_data, options):
 
     aggregation_keys = aggregated_data[0][0]
     keys = ['key_' + str(i) for i in range(len(aggregation_keys))]
+    if options.results:
+        headers =  keys + ['rps', 'avg (ms)', 'size', 'taken_max', 'size_max']
+    else:
+        headers = keys + ['requests', 'taken (ms)', 'size', 'taken_max', 'size_max']
     if not options.quiet:
-        csvwriter.writerow(keys + ['requests', 'taken (ms)', 'size', 'taken_max', 'size_max'])
+        csvwriter.writerow(headers)
     for aggregation_keys, aggregated_row in aggregated_data:
         csvwriter.writerow(list(aggregation_keys) + aggregated_row)
