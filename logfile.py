@@ -10,6 +10,7 @@ FIELDS_MAP = {
     'minute': lambda x: x['time_received_datetimeobj'].strftime('%Y-%m-%d %H:%M'),
     'second': lambda x:  x['time_received_datetimeobj'].strftime('%Y-%m-%d %H:%M:%S'),
     '10minutes': lambda x:  x['time_received_datetimeobj'].strftime('%Y-%m-%d %H:') + str(x['time_received_datetimeobj'].minute / 10) + "0",
+    'size': lambda x:  0 if x['response_bytes_clf'] == '-' else int(x['response_bytes_clf'])
 }
 
 def fields(log_dict):

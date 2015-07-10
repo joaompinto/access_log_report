@@ -65,12 +65,8 @@ def summarize_log_data(log_file, config, options):
     while line:
         line = line.strip('\n')
         log_line_data = line_parser(line)
-        print log_line_data
         line_dict = log_line_data
-        #line_dict = logfile.logline2dict(line)
-        #print line_dict
-        print logfile.fields(line_dict)
-        line_dict = logfile.fields(line_dict)           # Handle special fields
+        line_dict = logfile.fields(line_dict)   # Handle special fields
         line_dict = replacements.apply_to(line_dict)
         if not line_dict:
             line = log_file.readline()
@@ -84,7 +80,7 @@ def summarize_log_data(log_file, config, options):
 
         aggregated_row[IT_REQUESTS] += 1
         time_taken = line_dict['msec']
-        response_size = int(line_dict['response_bytes_clf'])
+        response_size = line_dict['size']
         aggregated_row[IT_TIME] += time_taken
         aggregated_row[IT_SIZE] += response_size
         aggregated_row[IT_TIME_MAX] = max(time_taken, aggregated_row[IT_TIME_MAX])
