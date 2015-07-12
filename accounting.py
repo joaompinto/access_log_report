@@ -12,11 +12,7 @@ IT_SIZE = 2
 IT_TIME_MAX = 3
 IT_SIZE_MAX = 4
 
-
-def summarize_log_data(log_file, config, options):
-    # Returns a list of elements with the following structure:
-    #   ( hour,  [vhost_name, [requests, time, size, time_max, size_max]] )
-    last_time = current_time = datetime.datetime.now()
+def check_last_state(log_file, config, options):
     state = config.get('state')
     if state:
         log_file.seek(0, 2)
@@ -44,6 +40,15 @@ def summarize_log_data(log_file, config, options):
                     log_file.seek(0)
                 else:
                     log_file.seek(last_postion)  # Go to last position
+    return last_time
+
+def summarize_log_data(log_file, config, options, skip_last_state):
+    # Returns a list of elements with the following structure:
+    #   ( hour,  [vhost_name, [requests, time, size, time_max, size_max]] )
+    current_time = last_time = datetime.datetime.now()
+    if not skip_last_state:
+        last_time = check_last_state(log_file, config, options)
+
     elapsed_seconds = (current_time - last_time).total_seconds()
 
     parsed_lines = 0
@@ -60,7 +65,6 @@ def summarize_log_data(log_file, config, options):
     while line:
         line = line.strip('\n')
         line_dict = logfile.logline2dict(line)
-        line_dict = logfile.fields(line_dict)
         line_dict = replacements.apply_to(line_dict)
         if not line_dict:
             line = log_file.readline()
@@ -86,14 +90,14 @@ def summarize_log_data(log_file, config, options):
         resuls_aggregated_data = {}
         for key, row in aggregated_data.iteritems():
             row[IT_TIME] = row[IT_TIME] / row[IT_REQUESTS]
-	    row[IT_SIZE] = row[IT_SIZE] / row[IT_REQUESTS]
+            row[IT_SIZE] = row[IT_SIZE] / row[IT_REQUESTS]
             row[IT_REQUESTS] = int(row[IT_REQUESTS] / elapsed_seconds * 100) / 100.0
-	    
+
 
     # Sort data by aggregation key
     aggregated_data = sorted(aggregated_data.iteritems())
 
-    if state:
+    if not skip_last_state and state:
         last_position_fname = state[0]
         file_size = log_file.tell()
         with open(last_position_fname, 'wt') as last_run_file:
@@ -112,7 +116,7 @@ def print_results(aggregated_data, options):
     aggregation_keys = aggregated_data[0][0]
     keys = ['key_' + str(i) for i in range(len(aggregation_keys))]
     if options.results:
-        headers =  keys + ['rps', 'avg (ms)', 'size', 'taken_max', 'size_max']
+        headers = keys + ['rps', 'avg (ms)', 'size', 'taken_max', 'size_max']
     else:
         headers = keys + ['requests', 'taken (ms)', 'size', 'taken_max', 'size_max']
     if not options.quiet:

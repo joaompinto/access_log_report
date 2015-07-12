@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-
-from optparse import OptionParser
+import fileinput
 import accounting
+from optparse import OptionParser
 from config import Config
 
 
@@ -25,11 +25,14 @@ def main():
     config = Config(cfg_filename)
     log_fname = config.get('log')
     if len(args) > 1:
-        access_log_filename = args[1]
+        access_log_filename = args[1:]
+        log_file = fileinput.input(access_log_filename, openhook=fileinput.hook_compressed)
+        skip_last_state = True
     else:
         access_log_filename = log_fname[0]
-    log_file = open(access_log_filename)
-    aggregated_data = accounting.summarize_log_data(log_file, config, options)
+        log_file = open(access_log_filename)
+        skip_last_state = False
+    aggregated_data = accounting.summarize_log_data(log_file, config, options, skip_last_state)
     accounting.print_results(aggregated_data, options)
 
 if __name__ == '__main__':
