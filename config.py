@@ -11,7 +11,6 @@ class RegExMap:
             regex_dict[field] = exinsting_rules
 
     def apply_to(self, input_dict):
-        # print "input_dict", input_dict
         output_dict = {}
         for field in input_dict.iterkeys():
             output_dict[field] = input_dict[field]

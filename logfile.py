@@ -124,7 +124,6 @@ def logline2dict(line):
     line_dict = {}
     line_fields = re.findall(fmt_regex, line)
     if not line_fields:
-        print "Ignoring line not matching log format"
         return None
 
     for i in range(len(fmt_fields)):

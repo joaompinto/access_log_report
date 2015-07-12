@@ -1,3 +1,7 @@
+
+import matplotlib
+matplotlib.use('Agg')
+
 import csv
 from matplotlib.pyplot import *
 import matplotlib.dates as mdates

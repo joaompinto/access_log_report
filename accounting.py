@@ -45,6 +45,7 @@ def check_last_state(log_file, config, options):
 def summarize_log_data(log_file, config, options, skip_last_state):
     # Returns a list of elements with the following structure:
     #   ( hour,  [vhost_name, [requests, time, size, time_max, size_max]] )
+    state = config.get('state')
     current_time = last_time = datetime.datetime.now()
     if not skip_last_state:
         last_time = check_last_state(log_file, config, options)
@@ -61,13 +62,22 @@ def summarize_log_data(log_file, config, options, skip_last_state):
     # Setup replacements
     replacements = config.regex_map('replacements')
 
-    line = log_file.readline()
-    while line:
+    while True:
+        line = log_file.readline()
+        if not line: # EOF
+            break
+
         line = line.strip('\n')
         line_dict = logfile.logline2dict(line)
+        if not line_dict:
+            if not options.quiet:
+                print "=== Invalid line:\n"+line
+            continue
         line_dict = replacements.apply_to(line_dict)
         if not line_dict:
-            line = log_file.readline()
+            # Skipping line excluded by replacement rules
+            if not options.quiet:
+                print "*** Excluded line:\n"+line
             continue
         parsed_lines += 1
         aggregation_key = tuple([line_dict[group_name] for group_name in config.get('group_by')])
