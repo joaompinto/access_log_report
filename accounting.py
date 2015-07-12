@@ -4,11 +4,6 @@ import logfile
 from os.path import exists
 import datetime
 from dateutil import parser
-
-#print  os.path.dirname(os.path.realpath(__file__))
-#sys.path.append((os.path.dirname(os.path.realpath(__file__)+'/apache-log-parser')))
-
-import apache_log_parser
 from pprint import pprint
 
 IT_REQUESTS = 0
@@ -56,7 +51,7 @@ def summarize_log_data(log_file, config, options):
 
     # Setup format logging
     format_str = config.get('format', mandatory=True)[0]
-    line_parser = apache_log_parser.make_parser(format_str)
+    logfile.set_log_fmt(format_str)
 
     # Setup replacements
     replacements = config.regex_map('replacements')
@@ -64,9 +59,8 @@ def summarize_log_data(log_file, config, options):
     line = log_file.readline()
     while line:
         line = line.strip('\n')
-        log_line_data = line_parser(line)
-        line_dict = log_line_data
-        line_dict = logfile.fields(line_dict)   # Handle special fields
+        line_dict = logfile.logline2dict(line)
+        line_dict = logfile.fields(line_dict)
         line_dict = replacements.apply_to(line_dict)
         if not line_dict:
             line = log_file.readline()
@@ -87,12 +81,14 @@ def summarize_log_data(log_file, config, options):
         aggregated_row[IT_SIZE_MAX] = max(response_size, aggregated_row[IT_SIZE_MAX])
         line = log_file.readline()
 
-    # Calculae results
+    # Calculate results
     if options.results:
         resuls_aggregated_data = {}
         for key, row in aggregated_data.iteritems():
             row[IT_TIME] = row[IT_TIME] / row[IT_REQUESTS]
-            row[IT_REQUESTS] = row[IT_REQUESTS] / elapsed_seconds
+	    row[IT_SIZE] = row[IT_SIZE] / row[IT_REQUESTS]
+            row[IT_REQUESTS] = int(row[IT_REQUESTS] / elapsed_seconds * 100) / 100.0
+	    
 
     # Sort data by aggregation key
     aggregated_data = sorted(aggregated_data.iteritems())

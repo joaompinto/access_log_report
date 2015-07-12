@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os.path
-import sys
 
 from optparse import OptionParser
 import accounting
