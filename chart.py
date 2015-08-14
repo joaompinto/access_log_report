@@ -119,7 +119,7 @@ def create_chart(data, chart_name, config):
         color_i += 1
 
     fig.autofmt_xdate()
-    legend(prop={'size': 8})
+    legend(prop={'size': 8}, loc='upper left')
 
     setp(ax.get_xticklabels(), fontsize=8)
     output_filename = output_fname_prefix+"_"+time_str+".png"
