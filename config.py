@@ -6,9 +6,9 @@ class RegExMap:
         regex_dict = self.regex_dict = {}
         for line in lines:
             field, replace_str, find_regex = line.split()
-            exinsting_rules = regex_dict.get(field, [])
-            exinsting_rules.append((replace_str, re.compile(find_regex)))
-            regex_dict[field] = exinsting_rules
+            existing_rules = regex_dict.get(field, [])
+            existing_rules.append((replace_str, re.compile(find_regex)))
+            regex_dict[field] = existing_rules
 
     def apply_to(self, input_dict):
         output_dict = {}

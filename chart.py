@@ -6,6 +6,7 @@ import csv
 from matplotlib.pyplot import *
 import matplotlib.dates as mdates
 from dateutil import parser
+import PIL.Image
 
 COLUMNS_MAP = {
     'rps': 1,
@@ -18,6 +19,9 @@ TIME_MAP = {'hour': 60*60, '10minutes': 60*10, None: None}
 def build_chart_data(csvfilename, config):
     time_interval = None
     max_rps = 0
+    minimal_rps = config.get('minimal_rps')
+    minimal_rps = float(minimal_rps[0]) if minimal_rps else 0
+
 
     for time_str, time_interval in TIME_MAP.iteritems():
         if time_str in config.get('group_by'):
@@ -37,6 +41,8 @@ def build_chart_data(csvfilename, config):
             data_row = data.get(vhost, [])
             rps = float(requests) / float(time_interval)
             avg_msec = float(taken) / float(requests)
+            if minimal_rps and rps < minimal_rps:
+                avg_msec = 0
             #if rps < 10.0:
             #    max_rps = max(rps, max_rps)
             #    avg_msec = 0
@@ -124,4 +130,8 @@ def create_chart(data, chart_name, config):
     setp(ax.get_xticklabels(), fontsize=8)
     output_filename = output_fname_prefix+"_"+time_str+".png"
     savefig(output_filename)
+    im = PIL.Image.open(output_filename)
+    new_img = im.convert('P')
+    im.close()
+    new_img.save(output_filename)
     close()

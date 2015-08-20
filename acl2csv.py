@@ -33,7 +33,12 @@ def main():
         log_file = open(access_log_filename)
         skip_last_state = False
     aggregated_data = accounting.summarize_log_data(log_file, config, options, skip_last_state)
-    accounting.print_results(aggregated_data, options)
+    if not aggregated_data:
+	if not options.quiet:
+		print 'No results generated, excessive exclusion rule?'
+    else:
+    	accounting.print_results(aggregated_data, options)
+
 
 if __name__ == '__main__':
     try:
