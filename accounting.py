@@ -93,7 +93,6 @@ def summarize_log_data(log_file, config, options, skip_last_state):
         aggregated_row[IT_SIZE] += response_size
         aggregated_row[IT_TIME_MAX] = max(time_taken, aggregated_row[IT_TIME_MAX])
         aggregated_row[IT_SIZE_MAX] = max(response_size, aggregated_row[IT_SIZE_MAX])
-        line = log_file.readline()
 
     # Calculate results
     if options.results:
