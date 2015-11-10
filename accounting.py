@@ -12,6 +12,7 @@ IT_SIZE = 2
 IT_TIME_MAX = 3
 IT_SIZE_MAX = 4
 
+
 def check_last_state(log_file, config, options):
     state = config.get('state')
     if state:
@@ -42,6 +43,7 @@ def check_last_state(log_file, config, options):
                     log_file.seek(last_postion)  # Go to last position
     return last_time
 
+
 def summarize_log_data(log_file, config, options, skip_last_state):
     # Returns a list of elements with the following structure:
     #   ( hour,  [vhost_name, [requests, time, size, time_max, size_max]] )
@@ -64,20 +66,20 @@ def summarize_log_data(log_file, config, options, skip_last_state):
 
     while True:
         line = log_file.readline()
-        if not line: # EOF
+        if not line:  # EOF
             break
 
         line = line.strip('\n')
         line_dict = logfile.logline2dict(line)
         if not line_dict:
             if not options.quiet:
-                print "=== Invalid line:\n"+line
+                print "=== Invalid line:\n" + line
             continue
         line_dict = replacements.apply_to(line_dict)
         if not line_dict:
             # Skipping line excluded by replacement rules
             if not options.quiet:
-                print "*** Excluded line:\n"+line
+                print "*** Excluded line:\n" + line
             continue
         parsed_lines += 1
         aggregation_key = tuple([line_dict[group_name] for group_name in config.get('group_by')])
@@ -101,7 +103,6 @@ def summarize_log_data(log_file, config, options, skip_last_state):
             row[IT_TIME] = row[IT_TIME] / row[IT_REQUESTS]
             row[IT_SIZE] = row[IT_SIZE] / row[IT_REQUESTS]
             row[IT_REQUESTS] = int(row[IT_REQUESTS] / elapsed_seconds * 100) / 100.0
-
 
     # Sort data by aggregation key
     aggregated_data = sorted(aggregated_data.iteritems())

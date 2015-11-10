@@ -26,15 +26,13 @@ def attach_image(msgRoot, image_id, filename):
 
 
 def send_mime_mail(config):
-
     html_report = '\n'.join(config.get('body_html'))
 
     images = {}
 
-    for line  in config.get('images'):
+    for line in config.get('images'):
         image_id, image_fname = line.split()
         images[image_id] = image_fname
-
 
     # Create the root message and fill in the from, to, and subject headers
     msgRoot = MIMEMultipart('related')
@@ -58,7 +56,6 @@ def send_mime_mail(config):
     for image_id, filename in images.iteritems():
         attach_image(msgRoot, image_id, filename)
 
-
     # Send the email (this example assumes SMTP authentication is required)
     import smtplib
 
@@ -67,11 +64,13 @@ def send_mime_mail(config):
     smtp.sendmail(config.get('From')[0], config.get('To')[0].split(','), msgRoot.as_string())
     smtp.quit()
 
+
 def parse_args():
     cmd_parser = OptionParser()
     (options, args) = cmd_parser.parse_args()
 
     return options, args
+
 
 def main():
     (options, args) = parse_args()
@@ -79,9 +78,9 @@ def main():
     config = Config(cfg_filename)
     send_mime_mail(config)
 
+
 if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
         print "Interrupted"
-

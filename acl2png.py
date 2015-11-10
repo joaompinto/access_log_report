@@ -4,6 +4,7 @@ from config import Config
 import chart
 import sys
 
+
 def parse_args():
     cmd_parser = OptionParser()
 
@@ -21,7 +22,7 @@ def main():
     csv_filename = args[1]
     chart_sections = [section for section in config.config_dict.iterkeys() if section.endswith('_chart')]
     for chart_name in chart_sections:
-        data  = chart.build_chart_data(csv_filename, config)
+        data = chart.build_chart_data(csv_filename, config)
         chart.create_chart(data, chart_name, config)
 
 
@@ -30,4 +31,3 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         print "Interrupted"
-

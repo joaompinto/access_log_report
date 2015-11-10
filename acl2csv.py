@@ -11,9 +11,9 @@ def parse_args():
     cmd_parser = OptionParser()
 
     cmd_parser.add_option("-q", "--quiet", dest="quiet",
-        help="No information ouput", action="store_true", default=False)
+                          help="No information ouput", action="store_true", default=False)
     cmd_parser.add_option("-r", "--results", dest="results",
-        help="Calculate perofrmance results", action="store_true", default=False)
+                          help="Calculate perofrmance results", action="store_true", default=False)
     (options, args) = cmd_parser.parse_args()
 
     return options, args
@@ -34,10 +34,10 @@ def main():
         skip_last_state = False
     aggregated_data = accounting.summarize_log_data(log_file, config, options, skip_last_state)
     if not aggregated_data:
-	if not options.quiet:
-		print 'No results generated, excessive exclusion rule?'
+        if not options.quiet:
+            print 'No results generated, excessive exclusion rule?'
     else:
-    	accounting.print_results(aggregated_data, options)
+        accounting.print_results(aggregated_data, options)
 
 
 if __name__ == '__main__':

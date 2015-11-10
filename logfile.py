@@ -23,35 +23,35 @@ re_req_skipped = r"\S+ \S+ \S+"
 # {DIRECTIVE_SYMBOL: (FIELD_NAME, REGEX_WHEN_NEEDED, REGEX_WHEN_SKIPPED)}
 LOG_DIRECTIVES = {
     # ip is an odd one, since the default Apache is %h but
-    "h": ("ip",         re_str, re_str_skipped),
+    "h": ("ip", re_str, re_str_skipped),
     # HostnameLookups changes its content and %a is ALSO the ip. bleh.
-    "a": ("ip",         re_str, re_str_skipped),
-    "A": ("lip",        re_str, re_str_skipped),  # server (local) IP
-    "l": ("auth",       re_str, re_str_skipped),
-    "u": ("username",   re_str, re_str_skipped),
-    "t": ("timestamp",  re_ts,  re_ts_skipped),
-    "r": ("request",    re_req, re_req_skipped),
-    "m": ("method",     re_str, re_str_skipped),
-    "D": ("msec",       re_str, re_str_skipped),
-    "F": ("fbmsec",     re_str, re_str_skipped),
-    "q": ("query",      re_str, re_str_skipped),
-    "s": ("status",     re_str, re_str_skipped),
-    "b": ("bytes",      re_str, re_str_skipped),
-    "B": ("bytes",      re_str, re_str_skipped),
-    "O": ("bytes",      re_str, re_str_skipped),
-    "I": ("bytes_in",   re_str, re_str_skipped),
-    "v": ("domain",     re_str, re_str_skipped),  # Host header
+    "a": ("ip", re_str, re_str_skipped),
+    "A": ("lip", re_str, re_str_skipped),  # server (local) IP
+    "l": ("auth", re_str, re_str_skipped),
+    "u": ("username", re_str, re_str_skipped),
+    "t": ("timestamp", re_ts, re_ts_skipped),
+    "r": ("request", re_req, re_req_skipped),
+    "m": ("method", re_str, re_str_skipped),
+    "D": ("msec", re_str, re_str_skipped),
+    "F": ("fbmsec", re_str, re_str_skipped),
+    "q": ("query", re_str, re_str_skipped),
+    "s": ("status", re_str, re_str_skipped),
+    "b": ("bytes", re_str, re_str_skipped),
+    "B": ("bytes", re_str, re_str_skipped),
+    "O": ("bytes", re_str, re_str_skipped),
+    "I": ("bytes_in", re_str, re_str_skipped),
+    "v": ("domain", re_str, re_str_skipped),  # Host header
     # actual vhost. May clobber %v
-    "V": ("domain",     re_str, re_str_skipped),
-    "p": ("port",       re_str, re_str_skipped),
+    "V": ("domain", re_str, re_str_skipped),
+    "p": ("port", re_str, re_str_skipped),
     # todo: need generic %{foo}X parsing?
-    "{ratio}n":     ("ratio",   re_quot, re_quot_skipped),
-    "{host}i":      ("host",    re_quot, re_quot_skipped),
-    "{referer}i":   ("ref",     re_quot, re_quot_skipped),
-    "{user-agent}i": ("ua",     re_quot, re_quot_skipped),
-    "{x-oracle-dms-ecid}o": ("ecid",re_quot, re_quot_skipped),
-    "ignore":       ("ignore",  re_str, re_str_skipped),
-    "ignorequot":   ("ignore",  re_quot, re_quot_skipped),
+    "{ratio}n": ("ratio", re_quot, re_quot_skipped),
+    "{host}i": ("host", re_quot, re_quot_skipped),
+    "{referer}i": ("ref", re_quot, re_quot_skipped),
+    "{user-agent}i": ("ua", re_quot, re_quot_skipped),
+    "{x-oracle-dms-ecid}o": ("ecid", re_quot, re_quot_skipped),
+    "ignore": ("ignore", re_str, re_str_skipped),
+    "ignorequot": ("ignore", re_quot, re_quot_skipped),
 }
 
 FIELDS_MAP = {
@@ -66,6 +66,7 @@ FIELDS_MAP = {
     '10minutes': lambda x: strftime('%Y-%m-%d %H:', x['timestamp']) + str(x['timestamp'].tm_min / 10) + "0",
     'size': lambda x: 0 if x['bytes'] == '-' else int(x['bytes']),
 }
+
 
 def iso2datetime(date_str):
     # Python < 2.6 does not support %z
@@ -83,7 +84,7 @@ def iso2datetime(date_str):
 def format2regexp(fmt, relevant_fields=()):
     re_d = re.compile("%[\>\<\!,\d]*([\}\{\w\-]+)")
     directives = [x.lower() if '{' in x else x for x in re_d.findall(fmt)]
-    #directives = map(lcase, re_d.findall(fmt))
+    # directives = map(lcase, re_d.findall(fmt))
     colnames = list()
     pat = fmt
     for k in directives:
@@ -98,8 +99,8 @@ def format2regexp(fmt, relevant_fields=()):
             atom = skip_pattern
 
         if k.find("{") > -1:
-            p = re.compile("%[\>\<\!,\d]*"+k.replace("}",
-                           ".").replace("{", "."), re.I)
+            p = re.compile("%[\>\<\!,\d]*" + k.replace("}",
+                                                       ".").replace("{", "."), re.I)
             pat = p.sub(atom, pat, re.I)
         else:
             pat = re.sub("%[\>\<\!,\d]*" + k, atom, pat)
@@ -109,9 +110,6 @@ def format2regexp(fmt, relevant_fields=()):
         warn("unrecognized format directives: %%%s" % ", %".join(leftover))
 
     return pat, colnames
-
-
-
 
 
 def logline2dict(line):
@@ -141,5 +139,3 @@ def logline2dict(line):
 def set_log_fmt(log_format):
     global fmt_regex, fmt_fields
     fmt_regex, fmt_fields = format2regexp(log_format)
-
-

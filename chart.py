@@ -1,5 +1,5 @@
-
 import matplotlib
+
 matplotlib.use('Agg')
 
 import csv
@@ -13,7 +13,7 @@ COLUMNS_MAP = {
     'avg_msec': 2,
 }
 
-TIME_MAP = {'hour': 60*60, '10minutes': 60*10, None: None}
+TIME_MAP = {'hour': 60 * 60, '10minutes': 60 * 10, None: None}
 
 
 def build_chart_data(csvfilename, config):
@@ -21,7 +21,6 @@ def build_chart_data(csvfilename, config):
     max_rps = 0
     minimal_rps = config.get('minimal_rps')
     minimal_rps = float(minimal_rps[0]) if minimal_rps else 0
-
 
     for time_str, time_interval in TIME_MAP.iteritems():
         if time_str in config.get('group_by'):
@@ -43,7 +42,7 @@ def build_chart_data(csvfilename, config):
             avg_msec = float(taken) / float(requests)
             if minimal_rps and rps < minimal_rps:
                 avg_msec = 0
-            #if rps < 10.0:
+            # if rps < 10.0:
             #    max_rps = max(rps, max_rps)
             #    avg_msec = 0
             data_row.append((parser.parse(ts), rps, avg_msec))
@@ -128,7 +127,7 @@ def create_chart(data, chart_name, config):
     legend(prop={'size': 8}, loc='upper left')
 
     setp(ax.get_xticklabels(), fontsize=8)
-    output_filename = output_fname_prefix+"_"+time_str+".png"
+    output_filename = output_fname_prefix + "_" + time_str + ".png"
     savefig(output_filename)
     im = PIL.Image.open(output_filename)
     new_img = im.convert('P')
